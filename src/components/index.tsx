@@ -107,18 +107,20 @@ export function SourceTable({ rows }: { rows: Array<{ source: string; type: stri
 export function ArgosLogo({ compact = false }: { compact?: boolean }) {
   return (
     <span className={`argos-logo ${compact ? 'argos-logo-compact' : ''}`} aria-label="아르고스">
-      <span className="argos-logo-lens" aria-hidden="true"><i /><b /></span>
-      {!compact && <span className="argos-logo-word">argos</span>}
+      <img className="argos-logo-image" src="/assets/argos-logo.png" alt="" />
     </span>
   )
 }
 
-export function Header({ onNavigate }: { onNavigate?: (path: string) => void }) {
+export function Header({ onNavigate, showNewAnalysis = false, onNewAnalysis }: { onNavigate?: (path: string) => void; showNewAnalysis?: boolean; onNewAnalysis?: () => void }) {
   return (
     <header className="argos-header">
-      <a className="argos-header-logo" href="/" aria-label="아르고스 홈" onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate('/') } }}>
-        <ArgosLogo />
-      </a>
+      <div className="argos-header-inner">
+        <a className="argos-header-logo" href="/" aria-label="아르고스 홈" onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate('/') } }}>
+          <ArgosLogo />
+        </a>
+        {showNewAnalysis && <button className="argos-header-new-analysis" onClick={onNewAnalysis || (() => onNavigate?.('/'))}>← 새 기사 판독하기</button>}
+      </div>
     </header>
   )
 }

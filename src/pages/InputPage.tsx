@@ -3,11 +3,11 @@ import { Button, Callout } from '../components'
 import { getApiErrorMessage } from '../api/argos'
 
 const imvainGuide = [
-  { key: 'I', title: '독립성', body: '출처가 사안으로 이익이나 손해를 보는 이해관계자인지 검토합니다.', risk: '시청 대변인은 예산 삭감이 불가피하다고 말했다.', riskNote: '예산을 편성한 당사자의 발언입니다.', trust: '외부 재정 전문가인 김OO 교수는 삭감 규모가 과도하지 않다고 분석했다.', trustNote: '사안과 이해관계가 없는 제3자의 분석입니다.' },
-  { key: 'M', title: '복수성', body: '같은 내용을 말하는 독립적인 출처가 여러 곳인지 확인합니다.', risk: '한 명의 관계자만 같은 수치를 반복해서 말하고 있습니다.', riskNote: '독립적인 출처가 부족합니다.', trust: '서로 다른 기관과 전문가가 같은 수치를 확인했습니다.', trustNote: '복수의 독립된 출처가 확인됩니다.' },
-  { key: 'V', title: '검증성', body: '출처의 주장이나 인용 내용을 외부 자료로 확인할 수 있는지 살핍니다.', risk: '출처가 구체적인 자료나 수치를 제시하지 않았습니다.', riskNote: '주장을 뒷받침할 문서가 없습니다.', trust: '공개된 보고서와 통계가 같은 내용을 보여줍니다.', trustNote: '외부 자료로 검증할 수 있습니다.' },
-  { key: 'A', title: '권위·정보성', body: '해당 분야의 전문성과 사건에 직접 접근할 수 있는 위치인지 평가합니다.', risk: '사건과 멀리 있는 사람이 단정적으로 말했습니다.', riskNote: '전문성과 정보 접근이 확인되지 않습니다.', trust: '해당 분야 전문가가 공개 자료를 바탕으로 분석했습니다.', trustNote: '전문성과 정보 접근이 함께 확인됩니다.' },
-  { key: 'N', title: '기명성', body: '인물·기관·자료명이 기사에 구체적으로 명시되어 있는지 확인합니다.', risk: '익명 관계자의 말만 인용되어 있습니다.', riskNote: '이름과 직책을 확인할 수 없습니다.', trust: '발언자와 소속, 인용 자료가 명확하게 표시되어 있습니다.', trustNote: '누가 말했는지 확인할 수 있습니다.' },
+  { key: 'I', title: '독립성', question: '이 출처는 사안과 이해관계가 없는가', body: '출처가 사안으로 이익이나 손해를 보는 이해관계자인지 검토합니다.', risk: '시청 대변인은 예산 삭감이 불가피하다고 말했다.', riskNote: '예산을 편성한 당사자의 발언입니다.', trust: '외부 재정 전문가인 김OO 교수는 삭감 규모가 과도하지 않다고 분석했다.', trustNote: '사안과 이해관계가 없는 제3자의 분석입니다.' },
+  { key: 'M', title: '복수성', question: '기사 속 여러 출처가 같은 내용을 확인하는가', body: '같은 내용이 서로 독립적인 여러 출처에서 확인되는지 검토합니다.', risk: '한 명의 관계자만 예산이 30% 줄어든다고 말했다.', riskNote: '독립적인 출처가 부족합니다.', trust: '서로 다른 출처가 같은 내용을 확인했습니다.', trustNote: '복수의 독립된 출처가 확인됩니다.' },
+  { key: 'V', title: '검증성', question: '근거를 제시하는가, 주장만 하는가', body: '주장에 확인 가능한 근거가 함께 제시되었는지 검토합니다. 발언만 있으면 주장이고, 문서·통계·현장 자료가 함께 있으면 근거입니다.', risk: '예산이 크게 줄어든다고 한 관계자가 말했다.', riskNote: '주장을 뒷받침할 근거가 없습니다.', trust: '공개된 보고서와 통계가 같은 내용을 보여줍니다.', trustNote: '외부 자료로 검증할 수 있습니다.' },
+  { key: 'A', title: '권위·정보성', question: '이 주체를 말할 만한 위치에 있는가', body: '해당 분야의 전문성이 있거나 사건을 가까이서 알고 있는 위치인지 검토합니다.', risk: '한 시민이 SNS에 예산 삭감이 확정되었다고 적었다.', riskNote: '전문성과 정보 접근이 확인되지 않습니다.', trust: '해당 분야 전문가가 공개 자료를 바탕으로 분석했습니다.', trustNote: '전문성과 정보 접근이 함께 확인됩니다.' },
+  { key: 'N', title: '기명성', question: '이름과 출처를 밝혔는가', body: '이름을 밝힌 출처는 책임을 지며 확인 가능한 정보가 됩니다. 작성자·기관·사용된 자료와 날짜가 밝혀져 있는지 검토합니다.', risk: '“관계자”에 따르면 한 조사에서만 결과가 나왔다.', riskNote: '누가 말했는지 확인할 수 없습니다.', trust: 'OO연구원의 2026 시민 인식 조사 결과가 공개되었다.', trustNote: '자료 제공처와 조사 내용을 확인할 수 있습니다.' },
 ] as const
 
 export function InputPage({ onAnalyze }: { onAnalyze: (articleUrl: string) => Promise<void> }) {
@@ -93,7 +93,7 @@ export function InputPage({ onAnalyze }: { onAnalyze: (articleUrl: string) => Pr
               </button>
             ))}
           </div>
-          <h3>이 출처는 사안과 이해관계가 없는가</h3>
+          <h3>{activeGuide.question}</h3>
           <p className="criterion-copy">{activeGuide.body}</p>
           <div className="criterion-examples">
             <article className="source-example source-example-risk">

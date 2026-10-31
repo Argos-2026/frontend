@@ -97,12 +97,11 @@ function VerificationClaim({ report, evidenceById }: { report: CrossReport; evid
 
 function VerificationGroup({ verdict, reports, evidenceById }: { verdict: CrossReportVerdict; reports: CrossReport[]; evidenceById: Map<string, Evidence> }) {
   const config = verdictConfig[verdict]
-  if (reports.length === 0) return null
   return (
     <section className={`verification-group verification-group-${config.tone}`}>
       <h3><span>{config.label}</span> {reports.length}건</h3>
       <div className="verification-group-line" />
-      <div className="verification-group-list">{reports.map((report) => <VerificationClaim key={report.claimId} report={report} evidenceById={evidenceById} />)}</div>
+      {reports.length > 0 && <div className="verification-group-list">{reports.map((report) => <VerificationClaim key={report.claimId} report={report} evidenceById={evidenceById} />)}</div>}
     </section>
   )
 }
@@ -181,7 +180,6 @@ export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analy
   return (
     <main className="figma-page result-page">
       <section className="result-heading">
-        <button className="back-link" onClick={onNewAnalysis}>← <span>새 기사 판독하기</span></button>
         <article className="article-summary-card">
           <p>{result.article.publisher || '언론사 확인되지 않음'} <span>·</span> {formatDate(result.article.publishedAt)} <span>·</span> {result.article.author || '작성자 확인되지 않음'}</p>
           <h1>{result.article.title}</h1>

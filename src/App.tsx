@@ -31,7 +31,7 @@ function App() {
     }
   })()
 
-  return <div className="app-shell">{path !== '/loading' && <Header onNavigate={navigate} />}{page}{path !== '/loading' && <Footer />}</div>
+  return <div className="app-shell">{path !== '/loading' && <Header onNavigate={navigate} showNewAnalysis={path === '/result'} onNewAnalysis={() => navigate('/')} />}{page}{path !== '/loading' && <Footer />}</div>
 }
 
 export default App
