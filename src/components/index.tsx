@@ -104,22 +104,21 @@ export function SourceTable({ rows }: { rows: Array<{ source: string; type: stri
   return <div className="source-table"><div className="table-row table-head"><span>출처</span><span>유형</span><span>발행일</span><span>신뢰도</span></div>{rows.map((row) => <div className="table-row" key={`${row.source}-${row.date}`}><strong>{row.source}</strong><span>{row.type}</span><span>{row.date}</span><Chip tone={row.reliability > 70 ? 'trust' : 'caution'}>{row.reliability}%</Chip></div>)}</div>
 }
 
-export function Header({ onAnalyze, onNavigate, activePath = '/' }: { onAnalyze?: () => void; onNavigate?: (path: string) => void; activePath?: string }) {
-  const links = [
-    { label: '판독하기', path: '/' },
-    { label: '서비스 소개', path: '/about' },
-  ]
-
+export function ArgosLogo({ compact = false }: { compact?: boolean }) {
   return (
-    <header className="app-header">
-      <a className="brand-lockup" href="/" onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate('/') } }}>
-        <span className="brand-mark">A</span>
-        <div><strong>아르고스</strong><small>가짜뉴스 판독기</small></div>
+    <span className={`argos-logo ${compact ? 'argos-logo-compact' : ''}`} aria-label="아르고스">
+      <span className="argos-logo-lens" aria-hidden="true"><i /><b /></span>
+      {!compact && <span className="argos-logo-word">argos</span>}
+    </span>
+  )
+}
+
+export function Header({ onNavigate }: { onNavigate?: (path: string) => void }) {
+  return (
+    <header className="argos-header">
+      <a className="argos-header-logo" href="/" aria-label="아르고스 홈" onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate('/') } }}>
+        <ArgosLogo />
       </a>
-      <nav>
-        {links.map((link) => <a className={activePath === link.path ? 'active' : ''} href={link.path} key={link.path} onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate(link.path) } }}>{link.label}</a>)}
-      </nav>
-      <Button size="sm" variant="secondary" onClick={onAnalyze}>새 판독</Button>
     </header>
   )
 }
@@ -129,7 +128,7 @@ export function Tabs({ items, active, onChange }: { items: string[]; active: str
 }
 
 export function Footer() {
-  return <footer className="app-footer"><span>아르고스 · 정보의 맥락을 읽습니다.</span><span className="mono">v0.1.0</span></footer>
+  return <footer className="argos-footer"><span>© 아르고스 · AI 분석 결과는 참고용이며 최종 판단은 사용자에게 있습니다.</span></footer>
 }
 
 export function TextField({ label, placeholder, value, onChange }: { label: string; placeholder?: string; value: string; onChange: (value: string) => void }) {

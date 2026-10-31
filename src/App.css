@@ -388,6 +388,8 @@ nav a:hover { color: var(--brand-default); }
 .claim-relations span, .muted-text { color: var(--ink-muted); }
 .claim-evidence-link { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .claim-evidence-link a { overflow: hidden; color: var(--brand-default); text-overflow: ellipsis; white-space: nowrap; }
+.comparison-detail { min-width: 0; display: grid; gap: 4px; }
+.comparison-detail small { color: var(--ink-muted); font-size: 10px; line-height: 1.5; }
 .article-link { display: inline-flex; margin-top: 12px; color: var(--brand-default); font-size: 12px; font-weight: 600; }
 .result-status-box { min-width: 150px; display: grid; justify-items: center; gap: 6px; padding: 14px; border: 1px solid var(--line-default); border-radius: var(--radius-md); background: var(--surface-100); }
 .result-status-box strong { font-size: 20px; letter-spacing: -.04em; }
@@ -400,8 +402,11 @@ nav a:hover { color: var(--brand-default); }
 .source-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
 .source-card-heading h3 { margin: 10px 0 0; font-size: 15px; line-height: 1.45; }
 .source-card-heading .mono { color: var(--ink-muted); font-size: 9px; }
+.source-affiliation { margin: 6px 0 0; color: var(--ink-muted); font-size: 11px; }
 .source-quote { margin: 16px 0 0; padding: 12px 14px; border-left: 2px solid var(--gold-default); background: var(--gold-tint); color: var(--gold-ink); font-size: 12px; line-height: 1.7; }
 .source-note { margin: 12px 0 0; font-size: 11px; line-height: 1.65; }
+.source-assessment-list { display: grid; gap: 18px; }
+.source-assessment-group { display: grid; gap: 12px; }
 .criterion-list { display: grid; gap: 0; margin-top: 16px; border-top: 1px solid var(--line-default); }
 .criterion-row { padding: 12px 0; border-bottom: 1px solid var(--line-default); }
 .criterion-row:last-child { border-bottom: 0; padding-bottom: 0; }

@@ -1,4 +1,5 @@
 import './App.css'
+import './figma.css'
 import { createAnalysis } from './api/argos'
 import { Footer, Header } from './components'
 import { useRoute } from './router'
@@ -30,7 +31,7 @@ function App() {
     }
   })()
 
-  return <div className="app-shell"><Header activePath={path} onNavigate={navigate} onAnalyze={() => navigate('/')} />{page}<Footer /></div>
+  return <div className="app-shell">{path !== '/loading' && <Header onNavigate={navigate} />}{page}{path !== '/loading' && <Footer />}</div>
 }
 
 export default App

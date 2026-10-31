@@ -1,113 +1,153 @@
-import { useEffect, useState } from 'react'
-import { IMVAIN_KEYS, getAnalysisResult, getApiErrorMessage } from '../api/argos'
-import type { AnalysisResult, ArticleSource, Claim, ClaimVerdict, Criterion, CriterionStatus, Evidence, ImvainKey } from '../api/argos'
-import { Banner, Button, Callout, Card, Chip, FactRow, Tabs, VerdictBadge, type Verdict } from '../components'
+import { useEffect, useState, type ReactNode } from 'react'
+import { getAnalysisResult, getApiErrorMessage } from '../api/argos'
+import type { AnalysisResult, CrossReport, CrossReportVerdict, CriterionStatus, Evidence, ImvainKey, ReportComparisonStance, ReviewedSource, SourceAssessment } from '../api/argos'
+import { ArgosLogo, Button, Callout, Chip, type Verdict } from '../components'
 
-const verdictConfig: Record<ClaimVerdict, { label: string; tone: Verdict }> = {
-  SUPPORT: { label: '뒷받침', tone: 'trust' },
-  REFUTE: { label: '반박', tone: 'risk' },
-  CONFLICT: { label: '상충', tone: 'caution' },
-  INSUFFICIENT: { label: '근거 부족', tone: 'hold' },
+const verdictConfig: Record<CrossReportVerdict, { label: string; tone: Verdict }> = {
+  MATCHED: { label: '뒷받침', tone: 'trust' },
+  CONTRADICTED: { label: '반박', tone: 'risk' },
+  MIXED: { label: '근거 충돌', tone: 'caution' },
+  UNCONFIRMED: { label: '근거 부족', tone: 'hold' },
 }
 
-const criterionLabels: Record<ImvainKey, string> = {
-  independent: '독립성',
-  multiple: '복수성',
-  verify: '검증 가능성',
-  authoritative: '권위성',
-  informed: '정보성',
-  named: '기명성',
-}
-
-const sourceTypeLabels: Record<ArticleSource['type'], string> = {
+const sourceTypeLabels: Record<ReviewedSource['type'], string> = {
   PERSON: '인물',
   ORGANIZATION: '기관',
   DOCUMENT: '문서',
   OTHER: '기타',
 }
 
-const stanceLabels = {
-  SUPPORTS: '뒷받침',
-  REFUTES: '반박',
-  CONTEXT: '맥락',
-} as const
+const sourceCriterionGroups = [
+  { letter: 'I', title: '독립성', keys: ['independent'] as ImvainKey[] },
+  { letter: 'M', title: '복수성', keys: ['multiple'] as ImvainKey[] },
+  { letter: 'V', title: '검증성', keys: ['verify'] as ImvainKey[] },
+  { letter: 'A', title: '권위·정보성', keys: ['authoritative', 'informed'] as ImvainKey[] },
+  { letter: 'N', title: '기명성', keys: ['named'] as ImvainKey[] },
+] as const
+
+type CriterionVisualStatus = CriterionStatus | 'PARTIAL'
 
 function formatDate(value: string | null) {
   if (!value) return '확인되지 않음'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
-  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+  return new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium' }).format(date)
 }
 
-function statusTone(status: AnalysisResult['status']): Verdict {
-  if (status === 'COMPLETED') return 'trust'
-  if (status === 'PARTIAL_COMPLETED') return 'caution'
-  if (status === 'FAILED') return 'risk'
-  return 'hold'
-}
-
-function statusLabel(status: AnalysisResult['status']) {
-  if (status === 'COMPLETED') return '완료'
-  if (status === 'PARTIAL_COMPLETED') return '부분 완료'
-  if (status === 'FAILED') return '실패'
-  return '진행 중'
-}
-
-function criterionTone(status: CriterionStatus): Verdict {
+function criterionTone(status: CriterionVisualStatus): Verdict {
   if (status === 'MET') return 'trust'
   if (status === 'NOT_MET') return 'risk'
+  if (status === 'PARTIAL') return 'caution'
   return 'hold'
 }
 
-function criterionLabel(status: CriterionStatus) {
+function criterionLabel(status: CriterionVisualStatus) {
   if (status === 'MET') return '충족'
   if (status === 'NOT_MET') return '미충족'
+  if (status === 'PARTIAL') return '부분'
   return '확인 불가'
 }
 
-function ClaimResult({ claim, evidenceById, sourceNames }: { claim: Claim; evidenceById: Map<string, Evidence>; sourceNames: Map<string, string> }) {
-  const verdict = verdictConfig[claim.verdict]
+function getGroupedCriterion(source: ReviewedSource, keys: readonly ImvainKey[]) {
+  const criteria = keys.map((key) => source.imvain[key]).filter(Boolean)
+  const statuses = criteria.map((criterion) => criterion?.status)
+  const status: CriterionVisualStatus = statuses.length === 0
+    ? 'UNKNOWN'
+    : statuses.every((value) => value === 'MET')
+      ? 'MET'
+      : statuses.some((value) => value === 'NOT_MET')
+        ? 'NOT_MET'
+        : statuses.some((value) => value === 'MET')
+          ? 'PARTIAL'
+          : 'UNKNOWN'
+  const reasons = criteria.map((criterion) => criterion?.reason).filter((reason): reason is string => Boolean(reason))
+  return { status, reason: [...new Set(reasons)].join(' ') || '이 기준에 대한 평가 정보가 없습니다.' }
+}
+
+function comparisonLabel(stance: ReportComparisonStance) {
+  return stance === 'MATCHES' ? '뒷받침' : '반박'
+}
+
+function EvidenceLink({ evidence, stance, reason }: { evidence?: Evidence; stance: ReportComparisonStance; reason: string }) {
   return (
-    <article className={`claim-card claim-card-${verdict.tone}`}>
-      <div className="card-eyebrow"><span>핵심 주장</span><VerdictBadge verdict={verdict.tone} label={verdict.label} /></div>
-      <h3>{claim.text}</h3>
-      <p>{claim.reason}</p>
-      {claim.articleSourceIds.length > 0 && <div className="claim-relations"><strong>기사 내부 정보원</strong><span>{claim.articleSourceIds.map((sourceId) => sourceNames.get(sourceId) || sourceId).join(' · ')}</span></div>}
-      <div className="claim-evidence-links">
-        <strong>연결된 근거</strong>
-        {claim.evidenceLinks.length > 0 ? claim.evidenceLinks.map((link) => {
-          const evidence = evidenceById.get(link.evidenceId)
-          return <div className="claim-evidence-link" key={`${claim.claimId}-${link.evidenceId}`}><Chip tone={link.stance === 'REFUTES' ? 'risk' : link.stance === 'SUPPORTS' ? 'trust' : 'brand'}>{stanceLabels[link.stance]}</Chip>{evidence ? <a href={evidence.url} target="_blank" rel="noreferrer">{evidence.title} ↗</a> : <span>{link.evidenceId}</span>}</div>
-        }) : <span className="muted-text">연결된 외부 근거가 없습니다.</span>}
+    <div className="verification-evidence">
+      <span className={`evidence-dot evidence-dot-${stance === 'MATCHES' ? 'trust' : 'risk'}`} aria-hidden="true" />
+      <div>
+        {evidence ? <a href={evidence.url} target="_blank" rel="noreferrer">{evidence.title}</a> : <strong>연결된 근거를 확인할 수 없습니다.</strong>}
+        <small>{evidence?.publisher || '발행처 확인되지 않음'} · {comparisonLabel(stance)} · {reason}</small>
       </div>
+      {evidence && <a className="evidence-open" href={evidence.url} target="_blank" rel="noreferrer">원문 보기</a>}
+    </div>
+  )
+}
+
+function VerificationClaim({ report, evidenceById }: { report: CrossReport; evidenceById: Map<string, Evidence> }) {
+  const config = verdictConfig[report.verdict]
+  return (
+    <article className={`verification-claim verification-claim-${config.tone}`}>
+      <span className="claim-number">핵심 주장</span>
+      <h3>“{report.text}”</h3>
+      <p>{report.reason}</p>
+      {report.comparisons.length > 0 && <div className="verification-evidence-list">{report.comparisons.map((comparison) => <EvidenceLink key={`${report.claimId}-${comparison.evidenceId}`} evidence={evidenceById.get(comparison.evidenceId)} stance={comparison.stance} reason={comparison.reason} />)}</div>}
+      {report.comparisons.length === 0 && <div className="verification-empty">검색한 뉴스·공식 자료에서 관련 내용을 확인하지 않았습니다.</div>}
+      {report.analysisFailed && <Callout title="일부 비교 자료를 확인하지 못했습니다" tone="caution">확인된 결과만 화면에 표시합니다.</Callout>}
     </article>
   )
 }
 
-function SourceCard({ source, evidenceById }: { source: ArticleSource; evidenceById: Map<string, Evidence> }) {
+function VerificationGroup({ verdict, reports, evidenceById }: { verdict: CrossReportVerdict; reports: CrossReport[]; evidenceById: Map<string, Evidence> }) {
+  const config = verdictConfig[verdict]
+  if (reports.length === 0) return null
   return (
-    <article className="source-card">
-      <div className="source-card-heading"><div><Chip tone="brand">{sourceTypeLabels[source.type]}</Chip><h3>{source.name}</h3></div><span className="mono">{source.sourceId}</span></div>
-      <blockquote className="source-quote">“{source.citedInArticle}”</blockquote>
-      <p className="source-note">{source.verificationNote}</p>
-      <div className="criterion-list">
-        {IMVAIN_KEYS.map((key) => {
-          const criterion: Criterion | undefined = source.imvain[key]
-          const status = criterion?.status || 'UNKNOWN'
-          return <div className="criterion-row" key={key}><div className="criterion-heading"><strong>{criterionLabels[key]}</strong><Chip tone={criterionTone(status)}>{criterionLabel(status)}</Chip></div><p>{criterion?.reason || '이 기준에 대한 평가 정보가 없습니다.'}</p>{criterion && criterion.evidenceIds.length > 0 && <small>연결 근거: {criterion.evidenceIds.map((id) => evidenceById.get(id)?.title || id).join(' · ')}</small>}</div>
+    <section className={`verification-group verification-group-${config.tone}`}>
+      <h3><span>{config.label}</span> {reports.length}건</h3>
+      <div className="verification-group-line" />
+      <div className="verification-group-list">{reports.map((report) => <VerificationClaim key={report.claimId} report={report} evidenceById={evidenceById} />)}</div>
+    </section>
+  )
+}
+
+function SourceReviewCard({ source }: { source: ReviewedSource }) {
+  return (
+    <article className="source-review-card">
+      <div className="source-review-heading">
+        <div><span className="source-index">정보원</span><h3>{source.name}</h3></div>
+        <Chip tone="brand">{sourceTypeLabels[source.type]}</Chip>
+      </div>
+      {source.affiliation && <p className="source-affiliation">{source.affiliation}</p>}
+      <blockquote>“{source.citedInArticle}”</blockquote>
+      <div className="source-criterion-grid">
+        {sourceCriterionGroups.map((group) => {
+          const criterion = getGroupedCriterion(source, group.keys)
+          return <article className={`source-criterion source-criterion-${criterionTone(criterion.status)}`} key={group.letter}><strong className="criterion-letter">{group.letter}</strong><h4>{group.title}</h4><b>{criterionLabel(criterion.status)}</b><p>{criterion.reason}</p></article>
         })}
       </div>
     </article>
   )
 }
 
-function EvidenceCard({ evidence }: { evidence: Evidence }) {
-  return <article className="api-evidence-card"><div className="source-mark">{(evidence.publisher || evidence.title).slice(0, 1)}</div><div className="api-evidence-content"><a href={evidence.url} target="_blank" rel="noreferrer"><strong>{evidence.title} ↗</strong></a><small>{evidence.publisher || '발행처 확인되지 않음'} · {formatDate(evidence.publishedAt)}</small><p>{evidence.excerpt}</p></div></article>
+function SourceAssessmentPanel({ assessments }: { assessments: SourceAssessment[] }) {
+  const [selectedClaimId, setSelectedClaimId] = useState(assessments[0]?.claimId || '')
+  const selectedAssessment = assessments.find((assessment) => assessment.claimId === selectedClaimId) || assessments[0]
+  if (!selectedAssessment) return <Callout title="정보원 평가를 확인할 수 없습니다" tone="caution">평가할 기사 내부 정보원이 제공되지 않았습니다.</Callout>
+
+  return (
+    <section className="result-panel source-panel">
+      <p className="result-panel-lead">기사 속 출처들을 IMVAIN 기준으로 각각 확인했습니다.</p>
+      <div className="source-claim-list" role="tablist" aria-label="평가 대상 주장">
+        {assessments.map((assessment, index) => <button key={assessment.claimId} className={assessment.claimId === selectedAssessment.claimId ? 'active' : ''} onClick={() => setSelectedClaimId(assessment.claimId)} role="tab" aria-selected={assessment.claimId === selectedAssessment.claimId}><span>주장 {index + 1}</span><strong>{assessment.text}</strong><small>{assessment.sources.length > 0 ? assessment.sources[0].name : '정보원 없음'}</small></button>)}
+      </div>
+      <div className="source-review-list">{selectedAssessment.sources.length > 0 ? selectedAssessment.sources.map((source) => <SourceReviewCard key={source.sourceId} source={source} />) : <Callout title="기사 내부 정보원이 없습니다">이 주장에 연결된 정보원을 확인하지 못했습니다.</Callout>}</div>
+    </section>
+  )
+}
+
+function ResultState({ title, body, children }: { title: string; body: string; children?: ReactNode }) {
+  return <main className="figma-page result-page"><section className="result-state"><ArgosLogo /><h1>{title}</h1><p>{body}</p>{children}</section></main>
 }
 
 export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analysisId: string; onNewAnalysis: () => void; onGoToLoading: () => void }) {
-  const [activeTab, setActiveTab] = useState('판정 요약')
-  const [compact, setCompact] = useState(false)
+  const [activeTab, setActiveTab] = useState<'교차 검증' | '출처 평가'>('교차 검증')
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [loadedAnalysisId, setLoadedAnalysisId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -128,60 +168,47 @@ export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analy
           setLoadedAnalysisId(analysisId)
         }
       })
-
     return () => { disposed = true }
   }, [analysisId])
 
-  const isLoading = loadedAnalysisId !== analysisId
-
-  if (isLoading) {
-    return <main className="page-content loading-page"><section className="loading-card-wrap"><Card className="loading-card"><div className="loading-orbit" aria-hidden="true"><span /><span /><span /></div><h1>결과를 불러오는 중입니다.</h1><p>저장된 분석 결과를 확인하고 있습니다.</p></Card></section></main>
-  }
-
-  if (error || !result) {
-    return <main className="page-content loading-page"><section className="loading-card-wrap"><Card className="loading-card"><h1>결과를 불러오지 못했습니다.</h1><p>{error || '분석 결과가 없습니다.'}</p><div className="result-actions result-error-actions"><Button variant="secondary" onClick={onGoToLoading}>상태 다시 확인</Button><Button onClick={onNewAnalysis}>새 기사 판독</Button></div></Card></section></main>
-  }
+  if (loadedAnalysisId !== analysisId) return <ResultState title="결과를 불러오는 중입니다." body="저장된 분석 결과를 확인하고 있습니다." />
+  if (error || !result) return <ResultState title="결과를 불러오지 못했습니다." body={error || '분석 결과가 없습니다.'}><div className="result-state-actions"><Button variant="secondary" onClick={onGoToLoading}>상태 다시 확인</Button><Button onClick={onNewAnalysis}>새 기사 판독</Button></div></ResultState>
 
   const evidenceById = new Map(result.evidence.map((evidence) => [evidence.evidenceId, evidence]))
-  const sourceNames = new Map((result.articleSources || []).map((source) => [source.sourceId, source.name]))
+  const counts = (Object.keys(verdictConfig) as CrossReportVerdict[]).map((verdict) => ({ verdict, count: result.crossReports.filter((report) => report.verdict === verdict).length }))
+  const totalReports = Math.max(result.crossReports.length, 1)
 
   return (
-    <main className={`page-content result-page ${compact ? 'is-compact' : ''}`}>
-      <section className="result-topbar">
-        <div><p className="section-kicker">Output page · {activeTab}</p><h1>{result.article.title}</h1><p>{result.article.publisher || '언론사 확인되지 않음'} · {formatDate(result.article.publishedAt)}</p><a className="article-link" href={result.article.url} target="_blank" rel="noreferrer">기사 원문 열기 ↗</a></div>
-        <div className="result-actions"><Button variant="secondary" size="sm" onClick={() => setCompact((value) => !value)}>{compact ? '자세히 보기' : '간단히 보기'}</Button><Button size="sm" onClick={onNewAnalysis}>새 기사 판독</Button></div>
+    <main className="figma-page result-page">
+      <section className="result-heading">
+        <button className="back-link" onClick={onNewAnalysis}>← <span>새 기사 판독하기</span></button>
+        <article className="article-summary-card">
+          <p>{result.article.publisher || '언론사 확인되지 않음'} <span>·</span> {formatDate(result.article.publishedAt)} <span>·</span> {result.article.author || '작성자 확인되지 않음'}</p>
+          <h1>{result.article.title}</h1>
+          <a href={result.article.url} target="_blank" rel="noreferrer">{result.article.url}</a>
+        </article>
       </section>
 
-      <section className="result-summary section-soft">
-        <div className="result-summary-heading"><div><p className="section-kicker">판정 분석</p><h2>{result.summary.overallComment || '종합 분석 코멘트가 없습니다.'}</h2></div><div className="result-status-box"><Chip tone={statusTone(result.status)}>{statusLabel(result.status)}</Chip><strong>{result.analysisOutcome === 'NO_VERIFIABLE_CLAIMS' ? '주장 없음' : `${result.claims.length}개 주장`}</strong><small>{result.analysisOutcome}</small></div></div>
-        <div className="summary-cards"><Card title="분석 범위"><p>API가 반환한 실제 분석 항목입니다.</p><FactRow label="핵심 주장" value={`${result.claims.length}개`} /><FactRow label="외부 근거" value={`${result.evidence.length}개`} /><FactRow label="경고" value={`${result.warnings.length}개`} /></Card><Card title="기사 정보"><p>분석 대상 기사 메타데이터입니다.</p><FactRow label="언론사" value={result.article.publisher || '확인되지 않음'} /><FactRow label="작성자" value={result.article.author || '확인되지 않음'} /><FactRow label="발행일" value={formatDate(result.article.publishedAt)} /></Card></div>
-        <Callout title="사실 검증 요약">{result.summary.factCheckOverview || '사실 검증 요약이 없습니다.'}</Callout>
-        {result.summary.sourceAssessmentOverview && <Callout title="정보원 평가 요약">{result.summary.sourceAssessmentOverview}</Callout>}
-        {result.summary.unverifiedPoints.length > 0 && <div className="unverified-points"><strong>확인하지 못한 내용</strong><ul>{result.summary.unverifiedPoints.map((point) => <li key={point}>{point}</li>)}</ul></div>}
-      </section>
+      <div className="result-tabs" role="tablist">
+        {(['교차 검증', '출처 평가'] as const).map((tab) => <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)} role="tab" aria-selected={activeTab === tab}>{tab}</button>)}
+      </div>
 
-      <div className="result-tabs"><Tabs items={['판정 요약', '근거 보기', '출처 평가']} active={activeTab} onChange={setActiveTab} /><span className="mono">저장된 결과</span></div>
+      {activeTab === '교차 검증' ? (
+        <section className="result-panel verification-panel">
+          <p className="result-panel-lead">{result.summary.crossReportOverview || '기사의 핵심 주장들이 다른 뉴스와 공식 자료에서 같게 나오는지 확인했습니다.'}</p>
+          <div className="verdict-bar" aria-label="판정 분포">{counts.map(({ verdict, count }) => <span key={verdict} className={`verdict-bar-${verdictConfig[verdict].tone}`} style={{ width: `${(count / totalReports) * 100}%` }} />)}</div>
+          <div className="verdict-legend">{counts.map(({ verdict, count }) => <span key={verdict}><i className={`legend-dot legend-dot-${verdictConfig[verdict].tone}`} />{verdictConfig[verdict].label} {count}</span>)}</div>
+          <div className="verification-columns">
+            <VerificationGroup verdict="CONTRADICTED" reports={result.crossReports.filter((report) => report.verdict === 'CONTRADICTED')} evidenceById={evidenceById} />
+            <VerificationGroup verdict="MATCHED" reports={result.crossReports.filter((report) => report.verdict === 'MATCHED')} evidenceById={evidenceById} />
+            <VerificationGroup verdict="UNCONFIRMED" reports={result.crossReports.filter((report) => report.verdict === 'UNCONFIRMED')} evidenceById={evidenceById} />
+            <VerificationGroup verdict="MIXED" reports={result.crossReports.filter((report) => report.verdict === 'MIXED')} evidenceById={evidenceById} />
+          </div>
+          {result.summary.unverifiedPoints.length > 0 && <div className="unverified-box"><strong>확인하지 못한 내용</strong>{result.summary.unverifiedPoints.map((point) => <p key={point}>{point}</p>)}</div>}
+        </section>
+      ) : <SourceAssessmentPanel assessments={result.sourceAssessments} />}
 
-      <section className="result-columns">
-        <div className="result-column">
-          <Card title="사실 검증" className="result-section-card">
-            <p className="card-description">기사의 핵심 주장과 실제로 연결된 자료를 비교했습니다.</p>
-            <div className="claim-list">{result.claims.length > 0 ? result.claims.map((claim) => <ClaimResult key={claim.claimId} claim={claim} evidenceById={evidenceById} sourceNames={sourceNames} />) : <Callout title="검증 가능한 주장이 없습니다">{result.summary.factCheckOverview || '검증 가능한 주장이 없어 주장별 판정을 만들지 않았습니다.'}</Callout>}</div>
-          </Card>
-          <Card title="검증에 사용한 근거"><div className="api-evidence-list">{result.evidence.length > 0 ? result.evidence.map((evidence) => <EvidenceCard key={evidence.evidenceId} evidence={evidence} />) : <p className="muted-text">사용 가능한 외부 근거가 없습니다.</p>}</div></Card>
-        </div>
-
-        <div className="result-column">
-          <Card title="출처 평가 (IMVAIN)" className="result-section-card">
-            <p className="card-description">기사 속 정보원을 6개 기준으로 각각 확인했습니다.</p>
-            {result.articleSources === null ? <Callout title="정보원 평가를 확인할 수 없습니다" tone="caution">정보원 평가가 제공되지 않았습니다. 사실 검증 결과와 경고를 확인해 주세요.</Callout> : result.articleSources.length > 0 ? <div className="source-list">{result.articleSources.map((source) => <SourceCard key={source.sourceId} source={source} evidenceById={evidenceById} />)}</div> : <Callout title="기사 내부 정보원이 없습니다">분석한 기사에서 별도의 정보원을 확인하지 못했습니다.</Callout>}
-          </Card>
-          {result.warnings.length > 0 && <Card title="일부 처리 안내"><div className="warning-list">{result.warnings.map((warning, index) => <Callout key={`${warning.code}-${index}`} title={`${warning.code} · ${warning.stage}`} tone="caution">{warning.message}</Callout>)}</div></Card>}
-          <Card title="분석 원칙"><Banner>API가 제공한 판정·근거·정보원 연결만 표시하며, 합산 신뢰도 점수는 산출하지 않습니다.</Banner></Card>
-        </div>
-      </section>
-
-      {!compact && <section className="result-bottom section-soft"><div className="section-heading"><div><p className="section-kicker">Evidence</p><h2>원문 근거를 다시 확인하세요.</h2></div><p>각 자료의 원문 링크와 실제 분석에 사용된 발췌를 함께 표시합니다.</p></div><div className="evidence-grid">{result.evidence.length > 0 ? result.evidence.map((evidence) => <EvidenceCard key={evidence.evidenceId} evidence={evidence} />) : <p className="muted-text">표시할 근거가 없습니다.</p>}</div></section>}
+      <p className="result-disclaimer">AI가 수집한 자료를 바탕으로 한 참고용 분석이며, 최종 판단은 사용자에게 있습니다.</p>
     </main>
   )
 }

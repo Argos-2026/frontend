@@ -13,8 +13,8 @@ export type AnalysisStage =
   | 'AGGREGATING_RESULT'
 
 export type CriterionStatus = 'MET' | 'NOT_MET' | 'UNKNOWN'
-export type ClaimVerdict = 'SUPPORT' | 'REFUTE' | 'CONFLICT' | 'INSUFFICIENT'
-export type EvidenceStance = 'SUPPORTS' | 'REFUTES' | 'CONTEXT'
+export type CrossReportVerdict = 'MATCHED' | 'CONTRADICTED' | 'MIXED' | 'UNCONFIRMED'
+export type ReportComparisonStance = 'MATCHES' | 'CONTRADICTS'
 export type ArticleSourceType = 'PERSON' | 'ORGANIZATION' | 'DOCUMENT' | 'OTHER'
 
 export type Issue = {
@@ -49,23 +49,26 @@ export type Article = {
 
 export type Summary = {
   overallComment: string
-  factCheckOverview: string
+  crossReportOverview: string
   sourceAssessmentOverview: string | null
   unverifiedPoints: string[]
 }
 
-export type EvidenceLink = {
+export type ReportComparison = {
   evidenceId: string
-  stance: EvidenceStance
+  stance: ReportComparisonStance
+  reason: string
 }
 
-export type Claim = {
+export type CrossReport = {
   claimId: string
   text: string
-  verdict: ClaimVerdict
+  verdict: CrossReportVerdict
   reason: string
-  articleSourceIds: string[]
-  evidenceLinks: EvidenceLink[]
+  matchingCount: number
+  contradictingCount: number
+  comparisons: ReportComparison[]
+  analysisFailed: boolean
 }
 
 export type Evidence = {
@@ -86,26 +89,32 @@ export type Criterion = {
 export const IMVAIN_KEYS = ['independent', 'multiple', 'verify', 'authoritative', 'informed', 'named'] as const
 export type ImvainKey = (typeof IMVAIN_KEYS)[number]
 
-export type ArticleSource = {
+export type ReviewedSource = {
   sourceId: string
   name: string
+  affiliation: string | null
   type: ArticleSourceType
   citedInArticle: string
   verificationNote: string
-  // The API describes this as additional properties. The product contract guarantees these six keys,
-  // while the index signature keeps the client tolerant of future criteria.
+  // The API describes this as additional properties, one entry for each IMVAIN criterion.
   imvain: Partial<Record<ImvainKey, Criterion>> & Record<string, Criterion>
+  assessmentFailed: boolean
+}
+
+export type SourceAssessment = {
+  claimId: string
+  text: string
+  sources: ReviewedSource[]
 }
 
 export type AnalysisResult = {
   analysisId: string
   status: AnalysisStatus
-  analysisOutcome: string
   article: Article
   summary: Summary
-  claims: Claim[]
+  crossReports: CrossReport[]
+  sourceAssessments: SourceAssessment[]
   evidence: Evidence[]
-  articleSources: ArticleSource[] | null
   warnings: Issue[]
 }
 
