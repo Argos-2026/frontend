@@ -104,8 +104,24 @@ export function SourceTable({ rows }: { rows: Array<{ source: string; type: stri
   return <div className="source-table"><div className="table-row table-head"><span>출처</span><span>유형</span><span>발행일</span><span>신뢰도</span></div>{rows.map((row) => <div className="table-row" key={`${row.source}-${row.date}`}><strong>{row.source}</strong><span>{row.type}</span><span>{row.date}</span><Chip tone={row.reliability > 70 ? 'trust' : 'caution'}>{row.reliability}%</Chip></div>)}</div>
 }
 
-export function Header({ onAnalyze }: { onAnalyze?: () => void }) {
-  return <header className="app-header"><div className="brand-lockup"><span className="brand-mark">A</span><div><strong>아르고스</strong><small>가짜뉴스 판독기</small></div></div><nav><a href="#analysis">판독하기</a><a href="#system">디자인 시스템</a></nav><Button size="sm" variant="secondary" onClick={onAnalyze}>새 판독</Button></header>
+export function Header({ onAnalyze, onNavigate, activePath = '/' }: { onAnalyze?: () => void; onNavigate?: (path: string) => void; activePath?: string }) {
+  const links = [
+    { label: '판독하기', path: '/' },
+    { label: '서비스 소개', path: '/about' },
+  ]
+
+  return (
+    <header className="app-header">
+      <a className="brand-lockup" href="/" onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate('/') } }}>
+        <span className="brand-mark">A</span>
+        <div><strong>아르고스</strong><small>가짜뉴스 판독기</small></div>
+      </a>
+      <nav>
+        {links.map((link) => <a className={activePath === link.path ? 'active' : ''} href={link.path} key={link.path} onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate(link.path) } }}>{link.label}</a>)}
+      </nav>
+      <Button size="sm" variant="secondary" onClick={onAnalyze}>새 판독</Button>
+    </header>
+  )
 }
 
 export function Tabs({ items, active, onChange }: { items: string[]; active: string; onChange: (value: string) => void }) {
