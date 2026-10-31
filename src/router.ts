@@ -1,27 +1,36 @@
 import { useCallback, useEffect, useState } from 'react'
 
 export type RoutePath = '/' | '/loading' | '/result' | '/about'
-
-export function normalizePath(pathname: string): RoutePath {
-  if (pathname === '/loading' || pathname === '/result' || pathname === '/about') return pathname
-  return '/'
+export type AppRoute = {
+  path: RoutePath
+  analysisId?: string
 }
 
-export function navigate(path: RoutePath) {
+export function normalizePath(pathname: string): AppRoute {
+  const analysisRoute = pathname.match(/^\/(loading|result)\/([^/]+)$/)
+  if (analysisRoute) {
+    return { path: `/${analysisRoute[1]}` as '/loading' | '/result', analysisId: decodeURIComponent(analysisRoute[2]) }
+  }
+
+  if (pathname === '/about') return { path: '/about' }
+  return { path: '/' }
+}
+
+export function navigate(path: string) {
   window.history.pushState({}, '', path)
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
 export function useRoute() {
-  const [path, setPath] = useState<RoutePath>(() => normalizePath(window.location.pathname))
+  const [route, setRoute] = useState<AppRoute>(() => normalizePath(window.location.pathname))
 
   useEffect(() => {
-    const onPopState = () => setPath(normalizePath(window.location.pathname))
+    const onPopState = () => setRoute(normalizePath(window.location.pathname))
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  const go = useCallback((nextPath: RoutePath) => navigate(nextPath), [])
-  return { path, navigate: go }
+  const go = useCallback((nextPath: string) => navigate(nextPath), [])
+  return { route, navigate: go }
 }
 

@@ -285,6 +285,8 @@ nav a:hover { color: var(--brand-default); }
 .progress-row.done > span { border-color: var(--verdict-trust); }
 .progress-row.active { background: var(--brand-tint); color: var(--brand-strong); }
 .progress-row.active > span { border-color: var(--brand-default); animation: pulse 1.2s ease-in-out infinite; }
+.progress-row.failed { background: var(--verdict-risk-tint); color: var(--verdict-risk); }
+.progress-row.failed > span { border-color: var(--verdict-risk); }
 @keyframes pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--brand-default) 14%, transparent); } }
 .loading-card .callout { text-align: left; margin-bottom: 12px; }
 
@@ -370,4 +372,54 @@ nav a:hover { color: var(--brand-default); }
   .imvain-summary { grid-template-columns: 1fr; }
   .imvain-summary .imvain-axis { min-height: 150px; }
   .result-score { width: 100%; }
+}
+
+/* API-backed analysis states */
+.input-error { width: min(100%, 610px); margin: 16px auto 0; text-align: left; }
+.guide-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.loading-status { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 18px 0 -8px; }
+.loading-status .mono { color: var(--ink-muted); font-size: 10px; }
+.progress-row { transition: background .18s ease, color .18s ease; }
+.claim-card-trust { border-left-color: var(--verdict-trust); }
+.claim-card-risk { border-left-color: var(--verdict-risk); }
+.claim-card-hold { border-left-color: var(--verdict-hold); }
+.claim-relations, .claim-evidence-links { display: grid; gap: 7px; margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--line-default); font-size: 11px; }
+.claim-relations strong, .claim-evidence-links > strong { color: var(--ink-default); font-size: 11px; }
+.claim-relations span, .muted-text { color: var(--ink-muted); }
+.claim-evidence-link { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.claim-evidence-link a { overflow: hidden; color: var(--brand-default); text-overflow: ellipsis; white-space: nowrap; }
+.article-link { display: inline-flex; margin-top: 12px; color: var(--brand-default); font-size: 12px; font-weight: 600; }
+.result-status-box { min-width: 150px; display: grid; justify-items: center; gap: 6px; padding: 14px; border: 1px solid var(--line-default); border-radius: var(--radius-md); background: var(--surface-100); }
+.result-status-box strong { font-size: 20px; letter-spacing: -.04em; }
+.result-status-box small { color: var(--ink-muted); font-family: 'JetBrains Mono', monospace; font-size: 9px; text-align: center; }
+.unverified-points { margin-top: 18px; padding: 16px 18px; border: 1px solid var(--line-default); border-radius: var(--radius-md); background: var(--surface-100); font-size: 12px; }
+.unverified-points ul { display: grid; gap: 7px; margin: 10px 0 0; padding-left: 18px; color: var(--ink-muted); line-height: 1.6; }
+.result-error-actions { justify-content: center; margin-top: 24px; }
+.source-list, .api-evidence-list, .warning-list { display: grid; gap: 14px; }
+.source-card { padding: 18px; border: 1px solid var(--line-default); border-radius: var(--radius-md); background: var(--surface-0); }
+.source-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.source-card-heading h3 { margin: 10px 0 0; font-size: 15px; line-height: 1.45; }
+.source-card-heading .mono { color: var(--ink-muted); font-size: 9px; }
+.source-quote { margin: 16px 0 0; padding: 12px 14px; border-left: 2px solid var(--gold-default); background: var(--gold-tint); color: var(--gold-ink); font-size: 12px; line-height: 1.7; }
+.source-note { margin: 12px 0 0; font-size: 11px; line-height: 1.65; }
+.criterion-list { display: grid; gap: 0; margin-top: 16px; border-top: 1px solid var(--line-default); }
+.criterion-row { padding: 12px 0; border-bottom: 1px solid var(--line-default); }
+.criterion-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.criterion-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.criterion-heading strong { font-size: 12px; }
+.criterion-row p { margin: 6px 0 0; font-size: 11px; line-height: 1.65; }
+.criterion-row small { display: block; margin-top: 7px; color: var(--ink-muted); font-size: 10px; line-height: 1.5; }
+.api-evidence-card { display: flex; align-items: start; gap: 12px; min-width: 0; padding: 14px; border: 1px solid var(--line-default); border-radius: var(--radius-md); background: var(--surface-100); }
+.api-evidence-content { min-width: 0; flex: 1; }
+.api-evidence-content a { color: var(--brand-default); }
+.api-evidence-content strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.api-evidence-content small { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 10px; }
+.api-evidence-content p { margin: 9px 0 0; font-size: 11px; line-height: 1.65; }
+.evidence-grid .api-evidence-card { min-height: 132px; }
+
+@media (max-width: 640px) {
+  .result-status-box { width: 100%; grid-template-columns: auto 1fr; justify-items: start; align-items: center; }
+  .result-status-box small { grid-column: 2; }
+  .claim-evidence-link { align-items: start; }
+  .claim-evidence-link a { white-space: normal; }
 }

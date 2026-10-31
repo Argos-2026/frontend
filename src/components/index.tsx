@@ -35,8 +35,8 @@ export function Chip({ children, tone = 'neutral' }: { children: ReactNode; tone
   return <span className={`chip chip-${tone}`}>{children}</span>
 }
 
-export function VerdictBadge({ verdict, compact = false }: { verdict: Verdict; compact?: boolean }) {
-  return <span className={`verdict-badge verdict-${verdict} ${compact ? 'is-compact' : ''}`}>{verdictLabel[verdict]}</span>
+export function VerdictBadge({ verdict, compact = false, label }: { verdict: Verdict; compact?: boolean; label?: string }) {
+  return <span className={`verdict-badge verdict-${verdict} ${compact ? 'is-compact' : ''}`}>{label || verdictLabel[verdict]}</span>
 }
 
 export function ScoreRing({ score, label = '신뢰도' }: { score: number; label?: string }) {

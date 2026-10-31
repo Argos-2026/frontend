@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import './App.css'
+import { createAnalysis } from './api/argos'
 import { Footer, Header } from './components'
 import { useRoute } from './router'
 import { AboutPage } from './pages/AboutPage'
@@ -8,29 +8,29 @@ import { LoadingPage } from './pages/LoadingPage'
 import { ResultPage } from './pages/ResultPage'
 
 function App() {
-  const { path, navigate } = useRoute()
+  const { route, navigate } = useRoute()
+  const { path, analysisId } = route
 
-  useEffect(() => {
-    if (path !== '/loading') return undefined
-    const timer = window.setTimeout(() => navigate('/result'), 1500)
-    return () => window.clearTimeout(timer)
-  }, [navigate, path])
+  const handleAnalyze = async (articleUrl: string) => {
+    const accepted = await createAnalysis(articleUrl)
+    navigate(`/loading/${encodeURIComponent(accepted.analysisId)}`)
+  }
 
   const page = (() => {
     switch (path) {
       case '/loading':
-        return <LoadingPage onCancel={() => navigate('/')} />
+        return analysisId ? <LoadingPage analysisId={analysisId} onCancel={() => navigate('/')} onComplete={() => navigate(`/result/${encodeURIComponent(analysisId)}`)} /> : <InputPage onAnalyze={handleAnalyze} />
       case '/result':
-        return <ResultPage onNewAnalysis={() => navigate('/')} />
+        return analysisId ? <ResultPage analysisId={analysisId} onNewAnalysis={() => navigate('/')} onGoToLoading={() => navigate(`/loading/${encodeURIComponent(analysisId)}`)} /> : <InputPage onAnalyze={handleAnalyze} />
       case '/about':
         return <AboutPage />
       case '/':
       default:
-        return <InputPage onAnalyze={() => navigate('/loading')} />
+        return <InputPage onAnalyze={handleAnalyze} />
     }
   })()
 
-  return <div className="app-shell"><Header activePath={path} onNavigate={(nextPath) => navigate(nextPath as typeof path)} onAnalyze={() => navigate('/')} />{page}<Footer /></div>
+  return <div className="app-shell"><Header activePath={path} onNavigate={navigate} onAnalyze={() => navigate('/')} />{page}<Footer /></div>
 }
 
 export default App
