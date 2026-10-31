@@ -1,111 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  font-family: 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0B2A33;
+  background: #F6F8F7;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --brand-default: #0B6B73;
+  --brand-strong: #08525A;
+  --brand-tint: #E2F2F1;
+  --brand-on: #FFFFFF;
+  --iris-default: #1F4FA8;
+  --iris-soft: #EAF0FC;
+  --gold-default: #C9952B;
+  --gold-ink: #7D5A0F;
+  --gold-tint: #FCF5E6;
+  --surface-0: #F6F8F7;
+  --surface-100: #FFFFFF;
+  --surface-200: #EEF3F2;
+  --line-default: #D5DFDE;
+  --line-strong: #8FA3A6;
+  --ink-default: #0B2A33;
+  --ink-muted: #4A5F66;
+  --verdict-trust: #1E7A4C;
+  --verdict-trust-tint: #E3F3EA;
+  --verdict-caution: #9A5500;
+  --verdict-caution-tint: #FBEFDC;
+  --verdict-risk: #BF352B;
+  --verdict-risk-tint: #FBE5E2;
+  --verdict-hold: #5C686D;
+  --verdict-hold-tint: #EDF0F1;
+  --shadow-card: 0 12px 32px rgba(11, 42, 51, 0.08);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+    color-scheme: dark;
+    --brand-default: #3FB8B8;
+    --brand-strong: #6BD0CC;
+    --brand-tint: #123A40;
+    --brand-on: #04181C;
+    --iris-default: #86A9F2;
+    --iris-soft: #172A4D;
+    --gold-default: #E0B04F;
+    --gold-ink: #E3B456;
+    --gold-tint: #3B301B;
+    --surface-0: #0A1519;
+    --surface-100: #11222A;
+    --surface-200: #18303A;
+    --line-default: #24404B;
+    --line-strong: #4F6E78;
+    --ink-default: #E8F1F0;
+    --ink-muted: #A3B8BD;
+    --verdict-trust: #4CC489;
+    --verdict-trust-tint: #12372A;
+    --verdict-caution: #F0A640;
+    --verdict-caution-tint: #3A2A10;
+    --verdict-risk: #F4796D;
+    --verdict-risk-tint: #3F1B18;
+    --verdict-hold: #9AA8AD;
+    --verdict-hold-tint: #203034;
+    --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.24);
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { min-width: 320px; margin: 0; background: var(--surface-0); color: var(--ink-default); }
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
