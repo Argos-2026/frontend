@@ -193,7 +193,7 @@ export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analy
 
       {activeTab === '교차 검증' ? (
         <section className="result-panel verification-panel">
-          <p className="result-panel-lead">{result.summary.crossReportOverview || '기사의 핵심 주장들이 다른 뉴스와 공식 자료에서 같게 나오는지 확인했습니다.'}</p>
+          <p className="result-panel-lead">기사의 핵심 주장들이 다른 뉴스와 공식 자료에서 같게 나오는지 확인했습니다.</p>
           <div className="verdict-bar" aria-label="판정 분포">{counts.map(({ verdict, count }) => <span key={verdict} className={`verdict-bar-${verdictConfig[verdict].tone}`} style={{ width: `${(count / totalReports) * 100}%` }} />)}</div>
           <div className="verdict-legend">{counts.map(({ verdict, count }) => <span key={verdict}><i className={`legend-dot legend-dot-${verdictConfig[verdict].tone}`} />{verdictConfig[verdict].label} {count}</span>)}</div>
           <div className="verification-columns">
