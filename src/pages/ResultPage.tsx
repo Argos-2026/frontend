@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getAnalysisResult, getApiErrorMessage } from '../api/argos'
-import type { AnalysisResult, CrossReport, CrossReportVerdict, CriterionStatus, Evidence, ImvainKey, ReportComparisonStance, ReviewedSource, SourceAssessment } from '../api/argos'
-import { ArgosLogo, Button, Callout, Chip, type Verdict } from '../components'
+import type { AnalysisResult, CrossReport, CrossReportVerdict, CriterionStatus, Evidence, ImvainKey, ReviewedSource, SourceAssessment } from '../api/argos'
+import { ArgosLogo, Button, Callout, type Verdict } from '../components'
 import { decodeHtmlEntities } from '../utils/decodeHtmlEntities'
 
 const verdictConfig: Record<CrossReportVerdict, { label: string; tone: Verdict }> = {
@@ -73,7 +73,7 @@ function EvidenceLink({ evidence }: { evidence?: Evidence }) {
       <span className="evidence-dot" aria-hidden="true" />
       <div>
         {evidence ? <a href={evidence.url} target="_blank" rel="noreferrer">{decodeHtmlEntities(evidence.title)}</a> : <strong>연결된 근거를 확인할 수 없습니다.</strong>}
-        <small>{evidence?.publisher || '발행처 확인되지 않음'} · {comparisonLabel(stance)} · {reason}</small>
+        <small>{evidence?.publisher || '발행처 확인되지 않음'} · {formatEvidenceDate(evidence?.publishedAt ?? null)}</small>
       </div>
       {evidence && <a className="evidence-open" href={evidence.url} target="_blank" rel="noreferrer">원문 보기</a>}
     </div>
@@ -144,6 +144,10 @@ export function ResultPage({ analysisId, isDemo, onNewAnalysis, onGoToLoading }:
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [loadedAnalysisId, setLoadedAnalysisId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [analysisId, isDemo])
 
   useEffect(() => {
     let disposed = false
