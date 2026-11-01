@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/argos-api/(.*)",
+      "destination": "https://api.argos.o-r.kr/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

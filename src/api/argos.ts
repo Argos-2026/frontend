@@ -1,6 +1,13 @@
-const DEFAULT_API_BASE_URL = 'https://api.argos.o-r.kr'
+// Keep API calls on the frontend origin so local development and Vercel do not
+// depend on the API server allowing every frontend origin through CORS.
+const DEFAULT_API_BASE_URL = '/argos-api'
 
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '')
+export const DEMO_ARTICLE_URL = 'https://www.newspim.com/news/view/20251127000764'
+
+export function isDemoArticleUrl(articleUrl: string) {
+  return articleUrl.trim() === DEMO_ARTICLE_URL
+}
 
 export type AnalysisStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'PARTIAL_COMPLETED' | 'FAILED'
 export type AnalysisStage =
@@ -177,18 +184,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function createAnalysis(articleUrl: string) {
-  return request<AnalysisAcceptedResponse>('/api/v1/analyses', {
+  const basePath = isDemoArticleUrl(articleUrl) ? '/api/v1/demo/analyses' : '/api/v1/analyses'
+  return request<AnalysisAcceptedResponse>(basePath, {
     method: 'POST',
     body: JSON.stringify({ articleUrl }),
   })
 }
 
-export function getAnalysisStatus(analysisId: string) {
-  return request<AnalysisStatusResponse>(`/api/v1/analyses/${encodeURIComponent(analysisId)}`)
+export function getAnalysisStatus(analysisId: string, isDemo = false) {
+  const basePath = isDemo ? '/api/v1/demo/analyses' : '/api/v1/analyses'
+  return request<AnalysisStatusResponse>(`${basePath}/${encodeURIComponent(analysisId)}`)
 }
 
-export function getAnalysisResult(analysisId: string) {
-  return request<AnalysisResult>(`/api/v1/analyses/${encodeURIComponent(analysisId)}/result`)
+export function getAnalysisResult(analysisId: string, isDemo = false) {
+  const basePath = isDemo ? '/api/v1/demo/analyses' : '/api/v1/analyses'
+  return request<AnalysisResult>(`${basePath}/${encodeURIComponent(analysisId)}/result`)
 }
 
 export function getApiErrorMessage(error: unknown) {

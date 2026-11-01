@@ -138,7 +138,7 @@ function ResultState({ title, body, children }: { title: string; body: string; c
   return <main className="figma-page result-page"><section className="result-state"><ArgosLogo /><h1>{title}</h1><p>{body}</p>{children}</section></main>
 }
 
-export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analysisId: string; onNewAnalysis: () => void; onGoToLoading: () => void }) {
+export function ResultPage({ analysisId, isDemo, onNewAnalysis, onGoToLoading }: { analysisId: string; isDemo: boolean; onNewAnalysis: () => void; onGoToLoading: () => void }) {
   const [activeTab, setActiveTab] = useState<'교차 검증' | '출처 평가'>('교차 검증')
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [loadedAnalysisId, setLoadedAnalysisId] = useState<string | null>(null)
@@ -146,7 +146,7 @@ export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analy
 
   useEffect(() => {
     let disposed = false
-    void getAnalysisResult(analysisId)
+    void getAnalysisResult(analysisId, isDemo)
       .then((nextResult) => {
         if (!disposed) {
           setResult(nextResult)
@@ -161,7 +161,7 @@ export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analy
         }
       })
     return () => { disposed = true }
-  }, [analysisId])
+  }, [analysisId, isDemo])
 
   if (loadedAnalysisId !== analysisId) return <ResultState title="결과를 불러오는 중입니다." body="저장된 분석 결과를 확인하고 있습니다." />
   if (error || !result) return <ResultState title="결과를 불러오지 못했습니다." body={error || '분석 결과가 없습니다.'}><div className="result-state-actions"><Button variant="secondary" onClick={onGoToLoading}>상태 다시 확인</Button><Button onClick={onNewAnalysis}>새 기사 판독</Button></div></ResultState>

@@ -11,7 +11,7 @@ function statusLabel(status: AnalysisStatusResponse['status']) {
   return '분석 완료'
 }
 
-export function LoadingPage({ analysisId, onCancel, onComplete }: { analysisId: string; onCancel: () => void; onComplete: () => void }) {
+export function LoadingPage({ analysisId, isDemo, onCancel, onComplete }: { analysisId: string; isDemo: boolean; onCancel: () => void; onComplete: () => void }) {
   const [analysis, setAnalysis] = useState<AnalysisStatusResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -21,7 +21,7 @@ export function LoadingPage({ analysisId, onCancel, onComplete }: { analysisId: 
 
     const poll = async () => {
       try {
-        const nextAnalysis = await getAnalysisStatus(analysisId)
+        const nextAnalysis = await getAnalysisStatus(analysisId, isDemo)
         if (disposed) return
         setAnalysis(nextAnalysis)
 
@@ -42,7 +42,7 @@ export function LoadingPage({ analysisId, onCancel, onComplete }: { analysisId: 
       disposed = true
       if (timer) window.clearTimeout(timer)
     }
-  }, [analysisId, onComplete])
+  }, [analysisId, isDemo, onComplete])
 
   const isFailed = analysis?.status === 'FAILED'
 

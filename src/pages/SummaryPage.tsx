@@ -20,14 +20,14 @@ function ArticleSummary({ result }: { result: AnalysisResult }) {
   )
 }
 
-export function SummaryPage({ analysisId, onNewAnalysis, onGoToResult }: { analysisId: string; onNewAnalysis: () => void; onGoToResult: () => void }) {
+export function SummaryPage({ analysisId, isDemo, onNewAnalysis, onGoToResult }: { analysisId: string; isDemo: boolean; onNewAnalysis: () => void; onGoToResult: () => void }) {
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [loadedAnalysisId, setLoadedAnalysisId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let disposed = false
-    void getAnalysisResult(analysisId)
+    void getAnalysisResult(analysisId, isDemo)
       .then((nextResult) => {
         if (!disposed) {
           setResult(nextResult)
@@ -42,7 +42,7 @@ export function SummaryPage({ analysisId, onNewAnalysis, onGoToResult }: { analy
         }
       })
     return () => { disposed = true }
-  }, [analysisId])
+  }, [analysisId, isDemo])
 
   if (loadedAnalysisId !== analysisId) {
     return <main className="figma-page result-page"><section className="result-state"><ArgosLogo /><h1>종합 분석을 불러오는 중입니다.</h1><p>저장된 분석 결과를 정리하고 있습니다.</p></section></main>

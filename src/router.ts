@@ -4,12 +4,17 @@ export type RoutePath = '/' | '/loading' | '/summary' | '/result' | '/about'
 export type AppRoute = {
   path: RoutePath
   analysisId?: string
+  isDemo?: boolean
 }
 
-export function normalizePath(pathname: string): AppRoute {
+export function normalizePath(pathname: string, search = ''): AppRoute {
   const analysisRoute = pathname.match(/^\/(loading|summary|result)\/([^/]+)$/)
   if (analysisRoute) {
-    return { path: `/${analysisRoute[1]}` as '/loading' | '/summary' | '/result', analysisId: decodeURIComponent(analysisRoute[2]) }
+    return {
+      path: `/${analysisRoute[1]}` as '/loading' | '/summary' | '/result',
+      analysisId: decodeURIComponent(analysisRoute[2]),
+      isDemo: new URLSearchParams(search).get('demo') === '1',
+    }
   }
 
   if (pathname === '/about') return { path: '/about' }
@@ -22,10 +27,10 @@ export function navigate(path: string) {
 }
 
 export function useRoute() {
-  const [route, setRoute] = useState<AppRoute>(() => normalizePath(window.location.pathname))
+  const [route, setRoute] = useState<AppRoute>(() => normalizePath(window.location.pathname, window.location.search))
 
   useEffect(() => {
-    const onPopState = () => setRoute(normalizePath(window.location.pathname))
+    const onPopState = () => setRoute(normalizePath(window.location.pathname, window.location.search))
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
