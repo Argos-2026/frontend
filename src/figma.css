@@ -78,15 +78,20 @@ body { background: var(--figma-page); color: var(--figma-navy); }
 /* Loading */
 .loading-page { min-height: 100vh; display: grid; place-items: center; background: #fff; }
 .loading-screen { width: min(820px, calc(100% - 48px)); display: grid; justify-items: center; text-align: center; }
-.loading-screen > .argos-logo { margin-bottom: 105px; transform: scale(1.35); }
-.loading-progress { width: 100%; height: 8px; overflow: hidden; border-radius: 999px; background: #e9edf3; }
-.loading-progress span { display: block; height: 100%; border-radius: inherit; background: var(--figma-navy); transition: width .4s ease; }
-.loading-percent { margin-top: 24px; font-size: 26px; }
+.loading-screen > .argos-logo { margin-bottom: 105px; transform-origin: center; animation: loading-logo-pulse 1.8s ease-in-out infinite; }
+@keyframes loading-logo-pulse {
+  0%, 100% { transform: translateY(22px) scale(2.2); }
+  50% { transform: translateY(22px) scale(2.4); }
+}
 .loading-screen h1 { margin: 18px 0 0; font-size: clamp(22px, 3vw, 34px); letter-spacing: -.06em; }
 .loading-screen > p { margin: 12px 0 0; color: var(--figma-muted); font-size: 12px; }
 .loading-detail { width: min(600px, 100%); margin-top: 24px; }
 .loading-detail .callout { text-align: left; }
 .loading-screen > .button-ghost { margin-top: 26px; font-size: 11px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen > .argos-logo { animation: none; }
+}
 
 /* Result */
 .result-page { padding: 0 max(24px, calc((100% - 1280px) / 2)) 70px; background: var(--figma-page); }
