@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getAnalysisResult, getApiErrorMessage } from '../api/argos'
 import type { AnalysisResult } from '../api/argos'
 import { ArgosLogo, Button } from '../components'
+import { decodeHtmlEntities } from '../utils/decodeHtmlEntities'
 
 function formatDate(value: string | null) {
   if (!value) return '확인되지 않음'
@@ -14,7 +15,7 @@ function ArticleSummary({ result }: { result: AnalysisResult }) {
   return (
     <article className="article-summary-card">
       <p>{result.article.publisher || '언론사 확인되지 않음'} <span>·</span> {formatDate(result.article.publishedAt)} <span>·</span> {result.article.author || '작성자 확인되지 않음'}</p>
-      <h1>{result.article.title}</h1>
+      <h1>{decodeHtmlEntities(result.article.title)}</h1>
       <a href={result.article.url} target="_blank" rel="noreferrer">{result.article.url}</a>
     </article>
   )
