@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 
-export type RoutePath = '/' | '/loading' | '/result' | '/about'
+export type RoutePath = '/' | '/loading' | '/summary' | '/result' | '/about'
 export type AppRoute = {
   path: RoutePath
   analysisId?: string
 }
 
 export function normalizePath(pathname: string): AppRoute {
-  const analysisRoute = pathname.match(/^\/(loading|result)\/([^/]+)$/)
+  const analysisRoute = pathname.match(/^\/(loading|summary|result)\/([^/]+)$/)
   if (analysisRoute) {
-    return { path: `/${analysisRoute[1]}` as '/loading' | '/result', analysisId: decodeURIComponent(analysisRoute[2]) }
+    return { path: `/${analysisRoute[1]}` as '/loading' | '/summary' | '/result', analysisId: decodeURIComponent(analysisRoute[2]) }
   }
 
   if (pathname === '/about') return { path: '/about' }

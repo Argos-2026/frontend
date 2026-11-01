@@ -114,14 +114,16 @@ export function ArgosLogo({ compact = false }: { compact?: boolean }) {
 
 export function Header({ onNavigate, showNewAnalysis = false, onNewAnalysis }: { onNavigate?: (path: string) => void; showNewAnalysis?: boolean; onNewAnalysis?: () => void }) {
   return (
-    <header className="argos-header">
-      <div className="argos-header-inner">
-        <a className="argos-header-logo" href="/" aria-label="아르고스 홈" onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate('/') } }}>
-          <ArgosLogo />
-        </a>
-        {showNewAnalysis && <button className="argos-header-new-analysis" onClick={onNewAnalysis || (() => onNavigate?.('/'))}>← 새 기사 판독하기</button>}
-      </div>
-    </header>
+    <>
+      <header className="argos-header">
+        <div className="argos-header-inner">
+          <a className="argos-header-logo" href="/" aria-label="아르고스 홈" onClick={(event) => { if (onNavigate) { event.preventDefault(); onNavigate('/') } }}>
+            <ArgosLogo />
+          </a>
+        </div>
+      </header>
+      {showNewAnalysis && <div className="argos-header-new-analysis-row"><button className="argos-header-new-analysis" onClick={onNewAnalysis || (() => onNavigate?.('/'))}>← 새 기사 판독하기</button></div>}
+    </>
   )
 }
 

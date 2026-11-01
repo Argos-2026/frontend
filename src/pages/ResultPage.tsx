@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getAnalysisResult, getApiErrorMessage } from '../api/argos'
-import type { AnalysisResult, CrossReport, CrossReportVerdict, CriterionStatus, Evidence, ImvainKey, ReportComparisonStance, ReviewedSource, SourceAssessment } from '../api/argos'
-import { ArgosLogo, Button, Callout, Chip, type Verdict } from '../components'
+import type { AnalysisResult, CrossReport, CrossReportVerdict, CriterionStatus, Evidence, ImvainKey, ReviewedSource, SourceAssessment } from '../api/argos'
+import { ArgosLogo, Button, Callout, type Verdict } from '../components'
 
 const verdictConfig: Record<CrossReportVerdict, { label: string; tone: Verdict }> = {
   MATCHED: { label: '뒷받침', tone: 'trust' },
@@ -10,12 +10,7 @@ const verdictConfig: Record<CrossReportVerdict, { label: string; tone: Verdict }
   UNCONFIRMED: { label: '근거 부족', tone: 'hold' },
 }
 
-const sourceTypeLabels: Record<ReviewedSource['type'], string> = {
-  PERSON: '인물',
-  ORGANIZATION: '기관',
-  DOCUMENT: '문서',
-  OTHER: '기타',
-}
+const verdictOrder: CrossReportVerdict[] = ['CONTRADICTED', 'MATCHED', 'UNCONFIRMED', 'MIXED']
 
 const sourceCriterionGroups = [
   { letter: 'I', title: '독립성', keys: ['independent'] as ImvainKey[] },
@@ -64,17 +59,20 @@ function getGroupedCriterion(source: ReviewedSource, keys: readonly ImvainKey[])
   return { status, reason: [...new Set(reasons)].join(' ') || '이 기준에 대한 평가 정보가 없습니다.' }
 }
 
-function comparisonLabel(stance: ReportComparisonStance) {
-  return stance === 'MATCHES' ? '뒷받침' : '반박'
+function formatEvidenceDate(value: string | null) {
+  if (!value) return '발행일 확인되지 않음'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date).replace(/ /g, '').replace(/\.$/, '')
 }
 
-function EvidenceLink({ evidence, stance, reason }: { evidence?: Evidence; stance: ReportComparisonStance; reason: string }) {
+function EvidenceLink({ evidence }: { evidence?: Evidence }) {
   return (
     <div className="verification-evidence">
-      <span className={`evidence-dot evidence-dot-${stance === 'MATCHES' ? 'trust' : 'risk'}`} aria-hidden="true" />
+      <span className="evidence-dot" aria-hidden="true" />
       <div>
         {evidence ? <a href={evidence.url} target="_blank" rel="noreferrer">{evidence.title}</a> : <strong>연결된 근거를 확인할 수 없습니다.</strong>}
-        <small>{evidence?.publisher || '발행처 확인되지 않음'} · {comparisonLabel(stance)} · {reason}</small>
+        <small>{evidence?.publisher || '발행처 확인되지 않음'} · {formatEvidenceDate(evidence?.publishedAt || null)}</small>
       </div>
       {evidence && <a className="evidence-open" href={evidence.url} target="_blank" rel="noreferrer">원문 보기</a>}
     </div>
@@ -85,10 +83,9 @@ function VerificationClaim({ report, evidenceById }: { report: CrossReport; evid
   const config = verdictConfig[report.verdict]
   return (
     <article className={`verification-claim verification-claim-${config.tone}`}>
-      <span className="claim-number">핵심 주장</span>
       <h3>“{report.text}”</h3>
       <p>{report.reason}</p>
-      {report.comparisons.length > 0 && <div className="verification-evidence-list">{report.comparisons.map((comparison) => <EvidenceLink key={`${report.claimId}-${comparison.evidenceId}`} evidence={evidenceById.get(comparison.evidenceId)} stance={comparison.stance} reason={comparison.reason} />)}</div>}
+      {report.comparisons.length > 0 && <div className="verification-evidence-list">{report.comparisons.map((comparison) => <EvidenceLink key={`${report.claimId}-${comparison.evidenceId}`} evidence={evidenceById.get(comparison.evidenceId)} />)}</div>}
       {report.comparisons.length === 0 && <div className="verification-empty">검색한 뉴스·공식 자료에서 관련 내용을 확인하지 않았습니다.</div>}
       {report.analysisFailed && <Callout title="일부 비교 자료를 확인하지 못했습니다" tone="caution">확인된 결과만 화면에 표시합니다.</Callout>}
     </article>
@@ -106,15 +103,10 @@ function VerificationGroup({ verdict, reports, evidenceById }: { verdict: CrossR
   )
 }
 
-function SourceReviewCard({ source }: { source: ReviewedSource }) {
+function SourceReviewCard({ source, index, showSourceLabel }: { source: ReviewedSource; index: number; showSourceLabel: boolean }) {
   return (
     <article className="source-review-card">
-      <div className="source-review-heading">
-        <div><span className="source-index">정보원</span><h3>{source.name}</h3></div>
-        <Chip tone="brand">{sourceTypeLabels[source.type]}</Chip>
-      </div>
-      {source.affiliation && <p className="source-affiliation">{source.affiliation}</p>}
-      <blockquote>“{source.citedInArticle}”</blockquote>
+      {showSourceLabel && <p className="source-review-label">정보원 {index + 1} · {source.name} {source.affiliation ? `· ${source.affiliation}` : ''}</p>}
       <div className="source-criterion-grid">
         {sourceCriterionGroups.map((group) => {
           const criterion = getGroupedCriterion(source, group.keys)
@@ -136,7 +128,8 @@ function SourceAssessmentPanel({ assessments }: { assessments: SourceAssessment[
       <div className="source-claim-list" role="tablist" aria-label="평가 대상 주장">
         {assessments.map((assessment, index) => <button key={assessment.claimId} className={assessment.claimId === selectedAssessment.claimId ? 'active' : ''} onClick={() => setSelectedClaimId(assessment.claimId)} role="tab" aria-selected={assessment.claimId === selectedAssessment.claimId}><span>주장 {index + 1}</span><strong>{assessment.text}</strong><small>{assessment.sources.length > 0 ? assessment.sources[0].name : '정보원 없음'}</small></button>)}
       </div>
-      <div className="source-review-list">{selectedAssessment.sources.length > 0 ? selectedAssessment.sources.map((source) => <SourceReviewCard key={source.sourceId} source={source} />) : <Callout title="기사 내부 정보원이 없습니다">이 주장에 연결된 정보원을 확인하지 못했습니다.</Callout>}</div>
+      <div className="source-review-list">{selectedAssessment.sources.length > 0 ? selectedAssessment.sources.map((source, index) => <SourceReviewCard key={source.sourceId} source={source} index={index} showSourceLabel={selectedAssessment.sources.length > 1} />) : <Callout title="기사 내부 정보원이 없습니다">이 주장에 연결된 정보원을 확인하지 못했습니다.</Callout>}</div>
+      <div className="source-criterion-legend"><span className="source-legend-trust">충족</span><span className="source-legend-caution">부분</span><span className="source-legend-risk">미충족</span><span className="source-legend-hold">확인 불가</span></div>
     </section>
   )
 }
@@ -174,7 +167,7 @@ export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analy
   if (error || !result) return <ResultState title="결과를 불러오지 못했습니다." body={error || '분석 결과가 없습니다.'}><div className="result-state-actions"><Button variant="secondary" onClick={onGoToLoading}>상태 다시 확인</Button><Button onClick={onNewAnalysis}>새 기사 판독</Button></div></ResultState>
 
   const evidenceById = new Map(result.evidence.map((evidence) => [evidence.evidenceId, evidence]))
-  const counts = (Object.keys(verdictConfig) as CrossReportVerdict[]).map((verdict) => ({ verdict, count: result.crossReports.filter((report) => report.verdict === verdict).length }))
+  const counts = verdictOrder.map((verdict) => ({ verdict, count: result.crossReports.filter((report) => report.verdict === verdict).length }))
   const totalReports = Math.max(result.crossReports.length, 1)
 
   return (
@@ -197,12 +190,11 @@ export function ResultPage({ analysisId, onNewAnalysis, onGoToLoading }: { analy
           <div className="verdict-bar" aria-label="판정 분포">{counts.map(({ verdict, count }) => <span key={verdict} className={`verdict-bar-${verdictConfig[verdict].tone}`} style={{ width: `${(count / totalReports) * 100}%` }} />)}</div>
           <div className="verdict-legend">{counts.map(({ verdict, count }) => <span key={verdict}><i className={`legend-dot legend-dot-${verdictConfig[verdict].tone}`} />{verdictConfig[verdict].label} {count}</span>)}</div>
           <div className="verification-columns">
-            <VerificationGroup verdict="CONTRADICTED" reports={result.crossReports.filter((report) => report.verdict === 'CONTRADICTED')} evidenceById={evidenceById} />
-            <VerificationGroup verdict="MATCHED" reports={result.crossReports.filter((report) => report.verdict === 'MATCHED')} evidenceById={evidenceById} />
-            <VerificationGroup verdict="UNCONFIRMED" reports={result.crossReports.filter((report) => report.verdict === 'UNCONFIRMED')} evidenceById={evidenceById} />
-            <VerificationGroup verdict="MIXED" reports={result.crossReports.filter((report) => report.verdict === 'MIXED')} evidenceById={evidenceById} />
+            {(['MATCHED', 'CONTRADICTED', 'UNCONFIRMED', 'MIXED'] as CrossReportVerdict[]).map((verdict) => {
+              const reports = result.crossReports.filter((report) => report.verdict === verdict)
+              return reports.length > 0 && <VerificationGroup key={verdict} verdict={verdict} reports={reports} evidenceById={evidenceById} />
+            })}
           </div>
-          {result.summary.unverifiedPoints.length > 0 && <div className="unverified-box"><strong>확인하지 못한 내용</strong>{result.summary.unverifiedPoints.map((point) => <p key={point}>{point}</p>)}</div>}
         </section>
       ) : <SourceAssessmentPanel assessments={result.sourceAssessments} />}
 
