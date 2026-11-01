@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getAnalysisResult, getApiErrorMessage } from '../api/argos'
-import type { AnalysisResult, CrossReport, CrossReportVerdict, CriterionStatus, Evidence, ImvainKey, ReviewedSource, SourceAssessment } from '../api/argos'
-import { ArgosLogo, Button, Callout, type Verdict } from '../components'
+import type { AnalysisResult, CrossReport, CrossReportVerdict, CriterionStatus, Evidence, ImvainKey, ReportComparisonStance, ReviewedSource, SourceAssessment } from '../api/argos'
+import { ArgosLogo, Button, Callout, Chip, type Verdict } from '../components'
+import { decodeHtmlEntities } from '../utils/decodeHtmlEntities'
 
 const verdictConfig: Record<CrossReportVerdict, { label: string; tone: Verdict }> = {
   MATCHED: { label: '뒷받침', tone: 'trust' },
@@ -71,8 +72,8 @@ function EvidenceLink({ evidence }: { evidence?: Evidence }) {
     <div className="verification-evidence">
       <span className="evidence-dot" aria-hidden="true" />
       <div>
-        {evidence ? <a href={evidence.url} target="_blank" rel="noreferrer">{evidence.title}</a> : <strong>연결된 근거를 확인할 수 없습니다.</strong>}
-        <small>{evidence?.publisher || '발행처 확인되지 않음'} · {formatEvidenceDate(evidence?.publishedAt || null)}</small>
+        {evidence ? <a href={evidence.url} target="_blank" rel="noreferrer">{decodeHtmlEntities(evidence.title)}</a> : <strong>연결된 근거를 확인할 수 없습니다.</strong>}
+        <small>{evidence?.publisher || '발행처 확인되지 않음'} · {comparisonLabel(stance)} · {reason}</small>
       </div>
       {evidence && <a className="evidence-open" href={evidence.url} target="_blank" rel="noreferrer">원문 보기</a>}
     </div>
@@ -175,7 +176,7 @@ export function ResultPage({ analysisId, isDemo, onNewAnalysis, onGoToLoading }:
       <section className="result-heading">
         <article className="article-summary-card">
           <p>{result.article.publisher || '언론사 확인되지 않음'} <span>·</span> {formatDate(result.article.publishedAt)} <span>·</span> {result.article.author || '작성자 확인되지 않음'}</p>
-          <h1>{result.article.title}</h1>
+          <h1>{decodeHtmlEntities(result.article.title)}</h1>
           <a href={result.article.url} target="_blank" rel="noreferrer">{result.article.url}</a>
         </article>
       </section>
